@@ -1,0 +1,284 @@
+
+
+```{r}
+library(tidyverse)
+library(haven)
+library(here)
+library(cowplot)
+library(patchwork)
+library(ggthemes)
+library(MatchIt)
+d <- read_sav(here("data/State Rice Farm Data.sav"))
+```
+
+# Helper functions 
+
+```{r}
+# Variable used to control for demographics in the paper
+variables <- c("Female", "Age", "Hui", "FamilyIncomePerPerson", "MotherEducation")
+
+
+# Function to generate all possible subsets 
+generate_subsets <- function(variables) {
+  subsets <- list() # Initialize an empty list to store subsets
+  
+  for (i in 0:length(variables)) {
+    # Generate all combinations of length i
+    comb <- combn(variables, i, simplify = FALSE)
+    subsets <- c(subsets, comb) # Add the combinations to the list of subsets
+  }
+  
+  return(subsets)
+}
+
+
+# Generate regression model formula from the specified variables
+convert_subsets_to_formula <- function(all_subsets, measure){
+  all_formula <- lapply(all_subsets, 
+         function(vars){
+           if (identical(vars, character(0))){
+             results = paste0(measure, " ~ RiceFarm")
+           }else{
+             var_string = paste(vars, sep = "+", collapse = " + ")
+             results = paste(measure, "~", var_string, "+ RiceFarm")
+  
+           }
+           return (results)
+         })
+  return (all_formula)
+}
+
+all_subsets <- generate_subsets(variables)
+```
+
+# Set up models 
+
+```{r}
+all_sociogram_models <- convert_subsets_to_formula(all_subsets, "SelfInflationFamily")
+all_strangers_models <- convert_subsets_to_formula(all_subsets, "FriendStrangerDistinction")
+all_triad_models <- convert_subsets_to_formula(all_subsets, "y")
+```
+
+
+# Set up propensity matching dataset 
+
+Code from the below snippet is adapted from the OSF repository of the original paper.
+
+```{r}
+# sociogram matching dataset
+triad <- d
+triad <- data.frame(triad$RiceFarm, triad$FamilyIncomePerPerson, triad$Age, triad$Female, triad$MotherEducation, triad$SelfInflationFamily, triad$Hui)
+colnames(triad)<-c("RiceFarm", "FamilyIncomePerPerson", "Age", "Female", "MotherEducation","SelfInflationFamily","Hui")
+triad <-subset(triad, triad$RiceFarm<10000)
+triad <-subset(triad, triad$FamilyIncomePerPerson<10000)
+triad <-subset(triad, triad$Age<10000)
+triad <-subset(triad, triad$Female<10000)
+triad <-subset(triad, triad$MotherEducation<10000)
+triad <-subset(triad, triad$SelfInflationFamily <10000)
+triad <-subset(triad, triad$Hui<10000)
+summary(Matching<-glm(RiceFarm ~ FamilyIncomePerPerson+Age+Female+MotherEducation, family = binomial(), data = triad))
+PropensityScores <- data.frame(pr_score = predict(Matching, type = "response"),RiceFarm= Matching$model$RiceFarm)
+head(PropensityScores)
+mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+sociogram_match_ds <- match.data(mod_match)
+
+# friends stranger matching dataset
+triad <-d
+triad <- data.frame(triad$RiceFarm, triad$FamilyIncomePerPerson, triad$Age, triad$Female, triad$MotherEducation, triad$FriendStrangerDistinction, triad$Hui, triad$RewardHonestFriend,triad$RewardHonestStranger,triad$PunishDishonestFriend,triad$PunishDishonestStranger)
+colnames(triad)<-c("RiceFarm", "FamilyIncomePerPerson", "Age", "Female", "MotherEducation","FriendStrangerDistinction","Hui","RewardHonestFriend","RewardHonestStranger","PunishDishonestFriend","PunishDishonestStranger")
+triad <-subset(triad, triad$RiceFarm<10000)
+triad <-subset(triad, triad$FamilyIncomePerPerson<10000)
+triad <-subset(triad, triad$Age<10000)
+triad <-subset(triad, triad$Female<10000)
+triad <-subset(triad, triad$MotherEducation<10000)
+triad <-subset(triad, triad$FriendStrangerDistinction <10000)
+triad <-subset(triad, triad$Hui<10000)
+#Matching on the variables below.
+summary(Matching<-glm(RiceFarm ~ FamilyIncomePerPerson+Age+Female+MotherEducation, family = binomial(), data = triad))
+PropensityScores <- data.frame(pr_score = predict(Matching, type = "response"),RiceFarm= Matching$model$RiceFarm)
+mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+stranger_matche_ds <- match.data(mod_match)
+
+# holistic thoughts dataset
+triad <- d
+triad <- data.frame(triad$RiceFarm, triad$FamilyIncomePerPerson, triad$Age, triad$Female, triad$MotherEducation, triad$RelationalPairing, triad$Hui)
+colnames(triad)<-c("RiceFarm", "FamilyIncomePerPerson", "Age", "Female", "MotherEducation","RelationalPairing","Hui")
+triad <-subset(triad, triad$RiceFarm<10000)
+triad <-subset(triad, triad$FamilyIncomePerPerson<10000)
+triad <-subset(triad, triad$Age<10000)
+triad <-subset(triad, triad$Female<10000)
+triad <-subset(triad, triad$MotherEducation<10000)
+triad <-subset(triad, triad$RelationalPairing<10000)
+triad <-subset(triad, triad$Hui<10000)
+summary(Matching<-glm(RiceFarm ~ FamilyIncomePerPerson+Age+Female+MotherEducation, family = binomial(), data = triad))
+PropensityScores <- data.frame(pr_score = predict(Matching, type = "response"),RiceFarm= Matching$model$RiceFarm)
+head(PropensityScores)
+mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+summary(mod_match)
+holistic_match_ds <- match.data(mod_match)
+numY <- holistic_match_ds$RelationalPairing
+numN <- with(holistic_match_ds, 14 - numY)
+y <- cbind(numY, numN)
+```
+
+# Run model on the propensity matching dataset 
+
+```{r}
+sociogram_matched_res <- lapply(all_sociogram_models, 
+       function(m){
+         model = lm(as.formula(m), data = sociogram_match_ds)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+
+stranger_matched_res <- lapply(all_strangers_models, 
+       function(m){
+         model = lm(as.formula(m), data = stranger_matche_ds)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+
+
+holistic_matched_res <- lapply(all_triad_models, 
+       function(m){
+         model = glm(as.formula(m), data = holistic_match_ds, binomial)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+```
+
+# Run model on the unmatched dataset
+
+```{r}
+sociogram_nonmatched_res <- lapply(all_sociogram_models, 
+       function(m){
+         model = lm(as.formula(m), data = d)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+
+stranger_nonmatched_res <- lapply(all_strangers_models, 
+       function(m){
+         model = lm(as.formula(m), data = d)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+
+numY <- d$RelationalPairing
+numN <- with(d, 14 - numY)
+y <- cbind(numY, numN)
+
+holistic_nonmatched_res <- lapply(all_triad_models, 
+       function(m){
+         model = glm(as.formula(m), data = d, binomial)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+```
+
+# Processing dataframe for visualization
+
+```{r}
+sociogram_res <- bind_rows(sociogram_matched_res %>% mutate(type = "Matched"), 
+          sociogram_nonmatched_res %>% mutate(type = "Non-matched")) %>% 
+  filter(term == "RiceFarm") %>% 
+  group_by(type) %>% 
+  mutate(model_id = paste0("Model",row_number())) %>% 
+  mutate(model_id = case_when(
+    model == "SelfInflationFamily ~ RiceFarm" ~ "Rice/Wheat Only", 
+    model == "SelfInflationFamily ~ Female + Age + Hui + FamilyIncomePerPerson + MotherEducation + RiceFarm" ~ "Reported Model", 
+    TRUE ~ as.character(model_id)
+  )) %>% 
+  mutate(Significant = p.value < 0.05) %>% 
+  mutate(Significant = if_else(Significant, "p < 0.05", "N.S."))
+  
+stranger_res <- bind_rows(stranger_matched_res %>% mutate(type = "Matched"), 
+          stranger_nonmatched_res %>% mutate(type = "Non-matched")) %>% 
+  filter(term == "RiceFarm") %>% 
+  group_by(type) %>% 
+  mutate(model_id = paste0("Model",row_number())) %>% 
+  mutate(model_id = case_when(
+    model == "FriendStrangerDistinction ~ RiceFarm" ~ "Rice/Wheat Only", 
+    model == "FriendStrangerDistinction ~ Female + Age + Hui + FamilyIncomePerPerson + MotherEducation + RiceFarm" ~ "Reported Model", 
+    TRUE ~ as.character(model_id)
+  )) %>% 
+  mutate(Significant = p.value < 0.05) %>% 
+  mutate(Significant = if_else(Significant, "p < 0.05", "N.S."))
+
+holistic_res <- bind_rows(holistic_matched_res %>% mutate(type = "Matched"), 
+          holistic_nonmatched_res %>% mutate(type = "Non-matched")) %>% 
+  filter(term == "RiceFarm") %>% 
+  group_by(type) %>% 
+  mutate(model_id = paste0("Model",row_number())) %>% 
+  mutate(model_id = case_when(
+    model == "y ~ RiceFarm" ~ "Rice/Wheat Only", 
+    model == "y ~ Female + Age + Hui + FamilyIncomePerPerson + MotherEducation + RiceFarm" ~ "Reported Model", 
+    TRUE ~ as.character(model_id)
+  )) %>% 
+  mutate(Significant = p.value < 0.05) %>% 
+  mutate(Significant = if_else(Significant, "p < 0.05", "N.S."))
+
+```
+
+# Visualization
+
+## Sociogram
+
+```{r}
+sociogram_plot <- sociogram_res %>% 
+  ggplot(aes(model = estimate, x= reorder(model_id, estimate), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+  geom_pointrange() + 
+  geom_hline(yintercept = 0, color = "gray", linetype = "dashed") + 
+  scale_color_manual(values = c( "red", "black"))+
+  coord_flip() +
+  theme_few() + 
+  xlab("") + 
+  ylab("Estimate on Rice/Wheat") + 
+  labs(title = "Self-Inflation (Family)")  + 
+  facet_wrap(~type) + 
+  theme(legend.position = "None")
+```
+
+## Loyalty/Nepotism
+
+```{r}
+stranger_plot <- stranger_res %>% 
+  ggplot(aes(model = estimate, x= reorder(model_id, estimate), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+  geom_pointrange() + 
+  geom_hline(yintercept = 0, color = "gray", linetype = "dashed") + 
+  scale_color_manual(values = c(  "black","red"))+
+  coord_flip() +
+  theme_few() + 
+  xlab("") + 
+  ylab("Estimate on Rice/Wheat") + 
+  labs(title = "Loyalty/Nepotism")  + 
+  facet_wrap(~type) +
+  theme(legend.position = "None")
+```
+
+## Triads 
+
+```{r}
+rc_plot <- holistic_res %>% 
+  ggplot(aes(model = estimate, x= reorder(model_id, estimate), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+  geom_pointrange() + 
+  geom_hline(yintercept = 0, color = "gray", linetype = "dashed") + 
+  scale_color_manual(values = c(  "black","red"))+
+  coord_flip() +
+  theme_few() + 
+  xlab("") + 
+  guides(color = guide_legend(title = "")) + 
+  labs(title = "Relational Categorizations")  + 
+  ylab("Estimate on Rice/Wheat") + 
+  facet_wrap(~type) 
+```
+
+## Everything together 
+
+```{r fig.width=12, fig.height=5}
+all_plots <- plot_grid(sociogram_plot,stranger_plot,rc_plot, nrow = 1, rel_widths = c(2, 2, 2.5))
+
+saveRDS(all_plots, here("cached_data/ma_plot.Rds"))
+```
+
+

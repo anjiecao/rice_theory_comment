@@ -1,0 +1,14 @@
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{comment_files/figure-latex/unnamed-chunk-1-1.pdf}
+\caption{\label{fig:unnamed-chunk-1} Each panel represents the multiverse analysis for one task. Each point is one estimate on the Rice/Wheat predictor in the particular models. Black dots are the non-significant estimates, and red dots are the significant estimates. 32 models were run for each task. The propensity matching script was retrieved from the OSF repository of Talhelm \& Dong (2024). The script for the reanalysis and the generation of this figure could be found at \url{https://github.com/anjiecao/rice_theory_comment}.}
+\end{figure*}
+\begin{figure*}[hbt]
+\ifnextchar[{\eatarg}{}
+
+\centering
+\includegraphics{comment_files/figure-latex/unnamed-chunk-2-1.pdf}
+\caption{\label{fig:unnamed-chunk-2}Both pannel show the historical trends of the farm in farming rice versus wheat. Since both farms also farmed other crops, the proportion between rice and wheat (and barley, for Qukou farm) does not add up to 1. The dotted lines represent 1970. 1970 is the year that many participants were born in, which was calculated using the mean age of the participants (47) and the year the study was conducted (2017). Data plotted here was extracted from the two farm chronicles. The raw data can be found in the github repository: \url{https://github.com/anjiecao/rice_theory_comment}.}
+\end{figure*}
