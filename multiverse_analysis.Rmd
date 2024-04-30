@@ -60,7 +60,67 @@ all_triad_models <- convert_subsets_to_formula(all_subsets, "y")
 ```
 
 
-# Set up propensity matching dataset 
+# Set up the corresponding propensity matching dataset 
+
+```{r}
+set_up_matching_dataset <- function(raw_data, variable, task){
+  
+  if(length(variable) == 0){
+    
+    return (raw_data)
+ 
+  }else{
+    
+    if(task == "SelfInflationFamily"){
+      with_task <- c(variable, "SelfInflationFamily")
+      with_rice <- c(with_task, "RiceFarm")
+    }else if(task == "FriendStrangerDistinction"){
+      with_task <- c(variable, "FriendStrangerDistinction")
+      with_rice <- c(with_task, "RiceFarm")
+    }else if(task == "RelationalPairing"){
+      with_task <- c(variable, "RelationalPairing")
+      with_rice <- c(with_task, "RiceFarm")
+    }
+    
+    new_d <- d[,with_rice]
+    new_d <- new_d[apply(new_d, 1, function(row) all(ifelse(is.numeric(row), row < 10000, TRUE))), ] 
+    new_d <- new_d %>% filter(across(everything(), ~ !is.na(.)))
+  
+  var_string = paste(variable, sep = "+", collapse = " + ")
+  glm_spec = paste("RiceFarm", "~", var_string)
+  Matching<-glm(as.formula(glm_spec), family = binomial(), data = new_d)
+
+  PropensityScores <- data.frame(pr_score = predict(Matching, type = "response"),RiceFarm= Matching$model$RiceFarm)
+  
+  mod_match <- matchit(as.formula(glm_spec), method = "optimal", data = new_d) 
+  
+  matched_ds <- match.data(mod_match)
+  return (matched_ds)
+
+  
+  }
+}
+
+
+
+all_SelfInflationFamily_matching_dataset <- lapply(all_subsets, function(vars){
+  print(vars)
+  set_up_matching_dataset(d, vars, "SelfInflationFamily")
+})
+
+all_FriendStrangerDistinction_matching_dataset <- lapply(all_subsets, function(vars){
+  print(vars)
+  set_up_matching_dataset(d, vars, "FriendStrangerDistinction")
+})
+
+all_RelationalPairing_matching_dataset <- lapply(all_subsets, function(vars){
+  print(vars)
+  set_up_matching_dataset(d, vars, "RelationalPairing")
+})
+```
+
+
+# Set up propensity matching dataset as the original paper
 
 Code from the below snippet is adapted from the OSF repository of the original paper.
 
@@ -121,7 +181,48 @@ numN <- with(holistic_match_ds, 14 - numY)
 y <- cbind(numY, numN)
 ```
 
-# Run model on the propensity matching dataset 
+# Run model on the fully propensity matched dataset
+
+```{r}
+
+sociogram_fully_matched_res <- lapply(seq(1, length(all_sociogram_models)), 
+       function(id){
+         m = all_sociogram_models[[id]]
+         data = all_SelfInflationFamily_matching_dataset[[id]]
+         model = lm(as.formula(m), data = data)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+
+
+stranger_fully_matched_res <- lapply(seq(1, length(all_strangers_models)), 
+       function(id){
+         m = all_strangers_models[[id]]
+         data = all_FriendStrangerDistinction_matching_dataset[[id]]
+         model = lm(as.formula(m), data = data)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+
+holistic_fully_matched_res <- lapply(seq(1, length(all_RelationalPairing_matching_dataset)), 
+       function(id){
+         print(id)
+         m = all_triad_models[[id]]
+         data = all_RelationalPairing_matching_dataset[[id]]
+         
+         numY <- data$RelationalPairing
+         numN <- with(data, 14 - numY)
+         y <- cbind(numY, numN)
+         
+         model = glm(as.formula(m), data = data, binomial)
+         res = broom::tidy(model, conf.int	= TRUE) %>% mutate(model = m)
+       }) %>% 
+  bind_rows()
+
+```
+
+
+# Run model on the original propensity matching dataset 
 
 ```{r}
 sociogram_matched_res <- lapply(all_sociogram_models, 
@@ -179,7 +280,9 @@ holistic_nonmatched_res <- lapply(all_triad_models,
 # Processing dataframe for visualization
 
 ```{r}
-sociogram_res <- bind_rows(sociogram_matched_res %>% mutate(type = "Matched"), 
+sociogram_res <- bind_rows(
+        sociogram_fully_matched_res %>% mutate(type = "Model Matched"),
+        sociogram_matched_res %>% mutate(type = "Original Matched"), 
           sociogram_nonmatched_res %>% mutate(type = "Non-matched")) %>% 
   filter(term == "RiceFarm") %>% 
   group_by(type) %>% 
@@ -192,7 +295,9 @@ sociogram_res <- bind_rows(sociogram_matched_res %>% mutate(type = "Matched"),
   mutate(Significant = p.value < 0.05) %>% 
   mutate(Significant = if_else(Significant, "p < 0.05", "N.S."))
   
-stranger_res <- bind_rows(stranger_matched_res %>% mutate(type = "Matched"), 
+stranger_res <- bind_rows(
+          stranger_fully_matched_res %>% mutate(type = "Model Matched"),
+          stranger_matched_res %>% mutate(type = "Original Matched"), 
           stranger_nonmatched_res %>% mutate(type = "Non-matched")) %>% 
   filter(term == "RiceFarm") %>% 
   group_by(type) %>% 
@@ -205,7 +310,9 @@ stranger_res <- bind_rows(stranger_matched_res %>% mutate(type = "Matched"),
   mutate(Significant = p.value < 0.05) %>% 
   mutate(Significant = if_else(Significant, "p < 0.05", "N.S."))
 
-holistic_res <- bind_rows(holistic_matched_res %>% mutate(type = "Matched"), 
+holistic_res <- bind_rows(
+          holistic_fully_matched_res %>% mutate(type = "Model Matched"),
+          holistic_matched_res %>% mutate(type = "Original Matched"), 
           holistic_nonmatched_res %>% mutate(type = "Non-matched")) %>% 
   filter(term == "RiceFarm") %>% 
   group_by(type) %>% 
@@ -225,9 +332,15 @@ holistic_res <- bind_rows(holistic_matched_res %>% mutate(type = "Matched"),
 ## Sociogram
 
 ```{r}
+
+sociogram_res$type = factor(sociogram_res$type, levels = c("Non-matched", 
+                                                           "Original Matched", 
+                                                           "Model Matched"))
+  
 sociogram_plot <- sociogram_res %>% 
-  ggplot(aes(model = estimate, x= reorder(model_id, estimate), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+  ggplot(aes(model = estimate, x= reorder_within(model_id, estimate, type), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
   geom_pointrange() + 
+  scale_x_reordered() +
   geom_hline(yintercept = 0, color = "gray", linetype = "dashed") + 
   scale_color_manual(values = c( "red", "black"))+
   coord_flip() +
@@ -235,15 +348,27 @@ sociogram_plot <- sociogram_res %>%
   xlab("") + 
   ylab("Estimate on Rice/Wheat") + 
   labs(title = "Self-Inflation (Family)")  + 
-  facet_wrap(~type) + 
-  theme(legend.position = "None")
+  facet_wrap(~type, scales = "free_y") + 
+   theme(legend.position = "None", 
+        plot.title = element_text(hjust = 0.5, size = 10),
+        axis.title=element_text(size=8), 
+        axis.text.y = element_text(size = 6))
+
+sociogram_plot
+
 ```
 
 ## Loyalty/Nepotism
 
 ```{r}
+
+stranger_res$type = factor(stranger_res$type, levels = c("Non-matched", 
+                                                           "Original Matched", 
+                                                           "Model Matched"))
 stranger_plot <- stranger_res %>% 
-  ggplot(aes(model = estimate, x= reorder(model_id, estimate), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+  ggplot(aes(model = estimate, x= reorder_within(model_id, estimate, type), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+    scale_x_reordered() +
+
   geom_pointrange() + 
   geom_hline(yintercept = 0, color = "gray", linetype = "dashed") + 
   scale_color_manual(values = c(  "black","red"))+
@@ -252,15 +377,28 @@ stranger_plot <- stranger_res %>%
   xlab("") + 
   ylab("Estimate on Rice/Wheat") + 
   labs(title = "Loyalty/Nepotism")  + 
-  facet_wrap(~type) +
-  theme(legend.position = "None")
+  facet_wrap(~type, scales = "free_y") +
+  theme(legend.position = "None")+ 
+  theme(legend.position = "None", 
+        plot.title = element_text(hjust = 0.5, size = 10),
+        axis.title=element_text(size=8), 
+        axis.text.y = element_text(size = 6))
+
+stranger_plot
 ```
 
 ## Triads 
 
 ```{r}
+
+
+holistic_res$type = factor(holistic_res$type, levels = c("Non-matched", 
+                                                           "Original Matched", 
+                                                           "Model Matched"))
+
 rc_plot <- holistic_res %>% 
-  ggplot(aes(model = estimate, x= reorder(model_id, estimate), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+  ggplot(aes(model = estimate, x= reorder_within(model_id, estimate, type), y = estimate, ymin = conf.low, ymax = conf.high, color = Significant)) + 
+  scale_x_reordered() +
   geom_pointrange() + 
   geom_hline(yintercept = 0, color = "gray", linetype = "dashed") + 
   scale_color_manual(values = c(  "black","red"))+
@@ -270,13 +408,21 @@ rc_plot <- holistic_res %>%
   guides(color = guide_legend(title = "")) + 
   labs(title = "Relational Categorizations")  + 
   ylab("Estimate on Rice/Wheat") + 
-  facet_wrap(~type) 
+  facet_wrap(~type, scales = "free_y") +
+    theme(legend.position = "bottom", 
+        plot.title = element_text(hjust = 0.5, size = 10), 
+        axis.title=element_text(size=8),
+        axis.text.y = element_text(size = 6))
+
+rc_plot
 ```
 
 ## Everything together 
 
-```{r fig.width=12, fig.height=5}
-all_plots <- plot_grid(sociogram_plot,stranger_plot,rc_plot, nrow = 1, rel_widths = c(2, 2, 2.5))
+```{r fig.width=8, fig.height=12}
+all_plots <- plot_grid(sociogram_plot,stranger_plot,rc_plot, nrow = 3, rel_heights = c(1.5, 1.5, 1.7))
+
+all_plots
 
 saveRDS(all_plots, here("cached_data/ma_plot.Rds"))
 ```

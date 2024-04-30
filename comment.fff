@@ -3,7 +3,7 @@
 
 \centering
 \includegraphics{comment_files/figure-latex/unnamed-chunk-1-1.pdf}
-\caption{\label{fig:unnamed-chunk-1} Each panel represents the multiverse analysis for one task. Each point is one estimate on the Rice/Wheat predictor in the particular models. Black dots are the non-significant estimates, and red dots are the significant estimates. 32 models were run for each task. The propensity matching script was retrieved from the OSF repository of Talhelm \& Dong (2024). The script for the reanalysis and the generation of this figure could be found at \url{https://github.com/anjiecao/rice_theory_comment}.}
+\caption{\label{fig:unnamed-chunk-1} Each panel represents the multiverse analysis for one task. Each point is one estimate on the Rice/Wheat predictor in the particular models. Black dots are the non-significant estimates, and red dots are the significant estimates. Wheat was set as the reference level. The script for the reanalysis and the generation of this figure could be found at \url{https://github.com/anjiecao/rice_theory_comment}.}
 \end{figure*}
 \begin{figure*}[hbt]
 \ifnextchar[{\eatarg}{}
