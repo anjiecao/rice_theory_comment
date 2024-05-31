@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2024.4.29)  1 MAY 2024 17:53
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2024.4.29)  31 MAY 2024 14:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -668,7 +668,7 @@ Package caption Warning: Unused \captionsetup[figure] on input line 173.
 See the caption package documentation for explanation.
 
 AED endfloat: Processing end Figures and Tables [7] (./comment.fff
-<comment_files/figure-latex/unnamed-chunk-1-1.pdf, id=57, 484.81125pt x 849.1725pt>
+<comment_files/figure-latex/unnamed-chunk-1-1.pdf, id=59, 484.81125pt x 849.1725pt>
 File: comment_files/figure-latex/unnamed-chunk-1-1.pdf Graphic file (type pdf)
 <use comment_files/figure-latex/unnamed-chunk-1-1.pdf>
 Package pdftex.def Info: comment_files/figure-latex/unnamed-chunk-1-1.pdf  used on input line 5.
@@ -676,7 +676,7 @@ Package pdftex.def Info: comment_files/figure-latex/unnamed-chunk-1-1.pdf  used 
 
 LaTeX Warning: Float too large for page by 48.02705pt on input line 7.
 
-<comment_files/figure-latex/unnamed-chunk-2-1.pdf, id=59, 556.0775pt x 337.26pt>
+<comment_files/figure-latex/unnamed-chunk-2-1.pdf, id=61, 556.0775pt x 337.26pt>
 File: comment_files/figure-latex/unnamed-chunk-2-1.pdf Graphic file (type pdf)
 <use comment_files/figure-latex/unnamed-chunk-2-1.pdf>
 Package pdftex.def Info: comment_files/figure-latex/unnamed-chunk-2-1.pdf  used on input line 12.
@@ -686,18 +686,18 @@ Package rerunfilecheck Info: File `comment.out' has not changed.
 (rerunfilecheck)             Checksum: D9C48C3189EC20540C8B61A17CBB4C05;94.
  ) 
 Here is how much of TeX's memory you used:
- 16021 strings out of 477984
- 262245 string characters out of 5838315
+ 16023 strings out of 477984
+ 262292 string characters out of 5838315
  1861388 words of memory out of 5000000
  35885 multiletter control sequences out of 15000+600000
  589421 words of font info for 97 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,11n,77p,2840b,633s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,11n,77p,2946b,633s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {/Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}</Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb></Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri12.pfb></Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri8.pfb></Users/caoanjie/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss8.pfb>
-Output written on comment.pdf (9 pages, 245993 bytes).
+Output written on comment.pdf (9 pages, 247268 bytes).
 PDF statistics:
- 134 PDF objects out of 1000 (max. 8388607)
- 100 compressed objects within 1 object stream
- 23 named destinations out of 1000 (max. 500000)
+ 138 PDF objects out of 1000 (max. 8388607)
+ 103 compressed objects within 2 object streams
+ 25 named destinations out of 1000 (max. 500000)
  19 words of extra memory for PDF output out of 10000 (max. 10000000)
 
