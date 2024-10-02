@@ -10,6 +10,68 @@ lianhu_crops <- read_csv(here("data/lianhu_crops.csv"))
 qukou_crops <- read_csv(here("data/qukou_crops.csv"))
 ```
 
+# rice vs dryland
+
+```{r}
+lianhu_crops %>% 
+  mutate(sorghum_and_corn_area = as.numeric(sorghum_and_corn_area)) %>% 
+  mutate(dry_land_crops_area = wheat_area + sorghum_and_corn_area) %>% 
+  mutate(
+    rice_over_sum = rice_area / (rice_area + dry_land_crops_area),
+    dry_land_sum = dry_land_crops_area / (rice_area + dry_land_crops_area)
+  ) %>% 
+  select(year, rice_over_sum, dry_land_sum) %>% 
+  pivot_longer(cols = c(rice_over_sum, dry_land_sum)) %>% 
+  mutate(name = case_when(
+    name == "dry_land_sum" ~ "Dryland Crops", 
+    TRUE ~ "Rice"
+  )) %>% 
+  ggplot(aes(x = year, y = value, color = name)) + 
+  geom_point() +
+  geom_line(stat = 'summary', fun = 'mean') + 
+  theme_few() +
+  ylab("Proportion") + 
+  labs(title = "Lianhu Farm (Rice farm)") + 
+  theme(legend.position = "top") + 
+  scale_color_discrete(name = "") + 
+  xlab("Year") + 
+  xlim(1955, 2010)+
+  geom_vline(xintercept = 1970, color = "gray", linetype = "dashed", alpha = .7) + 
+  ggthemes::scale_color_economist(name = "")
+```
+
+```{r}
+qukou_crops %>% 
+  mutate(dry_land_crops_area = wheat_area + corn_area + sorghum_area) %>% 
+  mutate(
+    rice_over_sum = rice_area / (rice_area + dry_land_crops_area),
+    dry_land_sum = dry_land_crops_area / (rice_area + dry_land_crops_area)
+  ) %>% 
+  select(year, rice_over_sum, dry_land_sum) %>% 
+  pivot_longer(cols = c(rice_over_sum, dry_land_sum)) %>% 
+  mutate(name = case_when(
+    name == "dry_land_sum" ~ "Dryland Crops", 
+    TRUE ~ "Rice"
+  )) %>% 
+  ggplot(aes(x = year, y = value, color = name)) + 
+  geom_point() +
+  geom_line(stat = 'summary', fun = 'mean') + 
+  theme_few() +
+  ylab("Proportion") + 
+  labs(title = "Qukou Farm (Wheat farm)") + 
+  theme(legend.position = "top") + 
+  scale_color_discrete(name = "") + 
+  xlab("Year") + 
+  xlim(1955, 2010)+
+  geom_vline(xintercept = 1970, color = "gray", linetype = "dashed", alpha = .7) + 
+  ggthemes::scale_color_economist(name = "")
+  
+```
+
+
+
+
+# chronicle stuff 
 
 ```{r}
 lianhu_crops_p <- lianhu_crops %>% 
@@ -55,6 +117,64 @@ qukou_crops_p <- qukou_crops %>%
 
   
 ```
+
+# new version of the plot 
+
+```{r}
+lianhu_crops_p <- lianhu_crops %>% 
+  mutate(sorghum_and_corn_area = as.numeric(sorghum_and_corn_area)) %>% 
+  mutate(dry_land_crops_area = wheat_area + sorghum_and_corn_area) %>% 
+  mutate(
+    rice_over_sum = rice_area / (rice_area + dry_land_crops_area),
+    dry_land_sum = dry_land_crops_area / (rice_area + dry_land_crops_area)
+  ) %>% 
+  select(year, rice_over_sum, dry_land_sum) %>% 
+  pivot_longer(cols = c(rice_over_sum, dry_land_sum)) %>% 
+  mutate(name = case_when(
+    name == "dry_land_sum" ~ "Dryland Crops", 
+    TRUE ~ "Rice"
+  )) %>% 
+  ggplot(aes(x = year, y = value, color = name)) + 
+  geom_point() + 
+  geom_line(stat = 'summary', fun = 'mean') + 
+   ylim(0, 1) +
+  theme_few() +
+  ylab("Proportion") + 
+  labs(title = "Lianhu Farm (Rice farm)") + 
+  theme(legend.position = "top") + 
+  scale_color_discrete(name = "") + 
+  xlab("Year") + 
+  xlim(1955, 2010)+
+  geom_vline(xintercept = 1970, color = "gray", linetype = "dashed", alpha = .7) + 
+  ggthemes::scale_color_economist(name = "")
+
+qukou_crops_p <- qukou_crops %>% 
+  mutate(dry_land_crops_area = wheat_area + corn_area + sorghum_area) %>% 
+  mutate(
+    rice_over_sum = rice_area / (rice_area + dry_land_crops_area),
+    dry_land_sum = dry_land_crops_area / (rice_area + dry_land_crops_area)
+  ) %>% 
+  select(year, rice_over_sum, dry_land_sum) %>% 
+  pivot_longer(cols = c(rice_over_sum, dry_land_sum)) %>% 
+  mutate(name = case_when(
+    name == "dry_land_sum" ~ "Dryland Crops", 
+    TRUE ~ "Rice"
+  ))%>% 
+  ggplot(aes(x = year, y = value, color = name)) + 
+  geom_point() + 
+  geom_line(stat = 'summary', fun = 'mean') + 
+  ylim(0, 1) +
+  theme_few() +
+  ylab("") + 
+  labs(title = "Qukou Farm (Wheat farm)") + 
+  theme(legend.position = "top") + 
+  xlab("Year") + 
+  xlim(1955, 2010)+
+  geom_vline(xintercept = 1970, color = "gray", linetype = "dashed", alpha = .7) + 
+  ggthemes::scale_color_economist(name = "")
+```
+
+
 
 ```{r fig.width=8, fig.height=5}
 crop_p <- lianhu_crops_p + qukou_crops_p 

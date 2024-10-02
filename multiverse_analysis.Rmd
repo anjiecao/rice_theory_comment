@@ -139,7 +139,8 @@ triad <-subset(triad, triad$Hui<10000)
 summary(Matching<-glm(RiceFarm ~ FamilyIncomePerPerson+Age+Female+MotherEducation, family = binomial(), data = triad))
 PropensityScores <- data.frame(pr_score = predict(Matching, type = "response"),RiceFarm= Matching$model$RiceFarm)
 head(PropensityScores)
-mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+# mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation+Hui, method = "optimal", data = triad)
 sociogram_match_ds <- match.data(mod_match)
 
 # friends stranger matching dataset
@@ -156,7 +157,8 @@ triad <-subset(triad, triad$Hui<10000)
 #Matching on the variables below.
 summary(Matching<-glm(RiceFarm ~ FamilyIncomePerPerson+Age+Female+MotherEducation, family = binomial(), data = triad))
 PropensityScores <- data.frame(pr_score = predict(Matching, type = "response"),RiceFarm= Matching$model$RiceFarm)
-mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+# mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation+Hui, method = "optimal", data = triad)
 stranger_matche_ds <- match.data(mod_match)
 
 # holistic thoughts dataset
@@ -173,7 +175,8 @@ triad <-subset(triad, triad$Hui<10000)
 summary(Matching<-glm(RiceFarm ~ FamilyIncomePerPerson+Age+Female+MotherEducation, family = binomial(), data = triad))
 PropensityScores <- data.frame(pr_score = predict(Matching, type = "response"),RiceFarm= Matching$model$RiceFarm)
 head(PropensityScores)
-mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+# mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation, method = "optimal", data = triad)
+mod_match <- matchit(RiceFarm~ FamilyIncomePerPerson+Age+Female+MotherEducation+Hui, method = "optimal", data = triad)
 summary(mod_match)
 holistic_match_ds <- match.data(mod_match)
 numY <- holistic_match_ds$RelationalPairing
@@ -327,7 +330,7 @@ holistic_res <- bind_rows(
 
 ```
 
-# Visualization
+lib# Visualization
 
 ## Sociogram
 
